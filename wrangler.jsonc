@@ -1,0 +1,24 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "slot64",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-01",
+
+  // Static files are served straight from ./public, except /api/*, which
+  // always runs the Worker first so auth is checked before anything is served.
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // IMPORTANT: with Workers Builds, this file is the source of truth for
+  // bindings. Anything you add in the dashboard gets wiped on the next deploy
+  // unless it is also declared here. Set bucket_name to your real bucket.
+  "r2_buckets": [
+    { "binding": "ROMS", "bucket_name": "slot64-roms" }
+  ]
+
+  // FAMILY_PASSWORD and SESSION_SECRET are secrets, NOT declared here.
+  // Add them under Settings -> Variables and Secrets after the first deploy.
+}
