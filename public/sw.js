@@ -1,6 +1,6 @@
-const SHELL = 'slot64-shell-v17';
+const SHELL = 'slot64-shell-v18';
 const RUNTIME = 'slot64-core-v2';
-const FILES = ['./', './index.html', './layout.js', './manifest.webmanifest'];
+const FILES = ['./', './index.html', './layout.js', './vr.js', './manifest.webmanifest'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(SHELL).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

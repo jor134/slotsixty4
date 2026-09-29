@@ -274,6 +274,8 @@ body.custom-pad [class*="virtualGamepad" i]{display:none!important}
     <button class="btn" id="fit">Screen: Fit (4:3)</button>
     <button class="btn" id="stick">Stick: Floating</button>
     <button class="btn" id="ver">Core: stable</button>
+    <button class="btn" id="vr" style="display:none">Enter VR</button>
+    <button class="btn" id="vrshape" style="display:none">Panel: Curved</button>
     <button class="btn" id="dbg">Button debug: Off</button>
     <button class="btn" id="install">Install to home screen</button>
   </div>
@@ -310,6 +312,7 @@ body.custom-pad [class*="virtualGamepad" i]{display:none!important}
   <button id="npinfo" style="display:none">Netplay?</button>
 </div>
 
+<script src="vr.js"></script>
 <script src="layout.js"></script>
 <script>
 const DB='slot64',STORE='carts';
@@ -607,6 +610,7 @@ function buildOverlay(){
   const old=document.getElementById('pad-overlay');
   if(old) old.remove();
   document.body.classList.remove('custom-pad');
+  if(document.body.classList.contains('in-vr')) return;
   if(!controlsOn()) return;
   if(!gcPad()) return;
   if(!('ontouchstart' in window)) return;
@@ -1031,6 +1035,24 @@ function drawGuide(){
 }
 $('#guide').onclick=drawGuide;
 
+/* ---------- VR ----------
+   Quest only; the button stays hidden where WebXR isn't available. The panel
+   shows the emulator's picture — see the note at the top of vr.js for why
+   stereo and head-aiming aren't reachable from an emulator. */
+function vrShapeState(){
+  const b=$('#vrshape');
+  if(!b) return;
+  b.textContent='Panel: '+(window.vrShape&&window.vrShape()==='flat'?'Flat':'Curved');
+}
+if($('#vr')) $('#vr').onclick=async()=>{
+  try{ await window.enterVR(); }
+  catch(e){ alert('Could not start VR: '+(e&&e.message||e)); }
+};
+if($('#vrshape')) $('#vrshape').onclick=()=>{
+  window.vrSetShape(window.vrShape()==='flat'?'curved':'flat');
+  vrShapeState();
+};
+
 /* ---------- core version ----------
    The netplay rewrite landed at different points across builds, so if the
    host/join controls never appear this is the first thing to change. */
@@ -1318,6 +1340,9 @@ if(/iPhone|iPad/.test(navigator.userAgent) && !navigator.standalone){
   fitState();
   stickState();
   verState();
+  vrShapeState();
+  if(window.startPadPolling) window.startPadPolling();
+  if(window.vrSupported&&$('#vrshape')) $('#vrshape').style.display='';
   dbgState();
   ctrlsState();
   if(navigator.storage?.persist) navigator.storage.persist();
