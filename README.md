@@ -66,6 +66,54 @@ never re-downloads. Range requests are supported, so an interrupted download
 resumes. The service worker skips `/api/*` entirely — session checks must hit
 the network, and ROM bodies are far too large for the cache API.
 
+## VR (Quest 3)
+
+An **Enter VR** button appears on the shelf page only where WebXR exists, so
+the phone build is untouched. It puts the emulator's picture on a floating
+panel, flat or curved, carried by holding both grips.
+
+Built on the **WebXR Layers API**: the panel is an `XRQuadLayer` or
+`XRCylinderLayer` composited by the headset at its own resolution. That is
+sharper than drawing a textured quad in a normal WebXR session, and much less
+code — no projection matrices, no stereo maths, no depth buffer.
+
+### What VR here can't be
+
+Not stereo 3D, not head-aiming, no gun in your hand. Projects like the
+GoldenEye and Perfect Dark VR ports achieve that by building from a *game
+decompilation*: they have the source, so they can hook the camera matrix and
+render the world twice. An emulator exposes a framebuffer and a controller
+port and nothing else — there is no camera to hook. This is structural, not a
+missing feature, and it holds for every game.
+
+### The preserveDrawingBuffer patch
+
+`vr.js` patches `HTMLCanvasElement.prototype.getContext` to force
+`preserveDrawingBuffer: true` on WebGL contexts, and **must load before the
+main script** for that to land before EmulatorJS creates its canvas. Without
+it a WebGL canvas is undefined as a texture source after compositing and the
+panel renders black. EmulatorJS gives no way to pass context attributes, so
+there's no cleaner route. If the panel is black, check the script order first.
+
+### Controls
+
+Both Quest controllers and a Bluetooth gamepad map through the same binding
+table the touch overlay uses, so indices verified against a running game apply
+everywhere. A Bluetooth pad also works outside VR, on the phone.
+
+| Input | N64 |
+| --- | --- |
+| Left thumbstick | analog stick |
+| Right thumbstick | C buttons |
+| Right trigger / grip | A / B |
+| Left trigger / grip | Z / L |
+| Right A / B | R / Start |
+| Left X / Y | D-pad up / down |
+| Both grips + move | carry the panel |
+
+The d-pad is poorly served by Quest controllers — a Bluetooth pad covers it
+properly. Run `node test-vr.mjs` to exercise the mapping without a headset.
+
 ### What stayed on Render
 
 The netplay signaling server. EmulatorJS speaks socket.io, which needs a
